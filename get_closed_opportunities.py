@@ -69,17 +69,17 @@ def connect_to_salesforce():
 
 def get_closed_opportunities(sf, limit=10):
     """
-    Query Salesforce for closed opportunities and display their details
+    Query Salesforce for closed won opportunities and display their details
     """
-    print(f"\n📊 Querying for closed opportunities (limit: {limit})...")
+    print(f"\n📊 Querying for closed won opportunities (limit: {limit})...")
     
-    # SOQL query for closed opportunities
+    # SOQL query for closed won opportunities
     query = f"""
     SELECT Id, Name, AccountId, Account.Name, StageName, Amount, CloseDate, 
            Type, LeadSource, Description, CreatedDate, LastModifiedDate,
            Owner.Name, Owner.Email
     FROM Opportunity 
-    WHERE IsClosed = true 
+    WHERE StageName = 'Closed Won' 
     ORDER BY CloseDate DESC 
     LIMIT {limit}
     """
@@ -89,10 +89,10 @@ def get_closed_opportunities(sf, limit=10):
         opportunities = result['records']
         
         if not opportunities:
-            print("No closed opportunities found.")
+            print("No closed won opportunities found.")
             return
         
-        print(f"\n✅ Found {len(opportunities)} closed opportunities:\n")
+        print(f"\n✅ Found {len(opportunities)} closed won opportunities:\n")
         print("=" * 100)
         
         for i, opp in enumerate(opportunities, 1):
@@ -135,7 +135,7 @@ def main():
     """
     Main function to run the script
     """
-    print("🚀 Salesforce Closed Opportunities Retrieval Script")
+    print("🚀 Salesforce Closed Won Opportunities Retrieval Script")
     print("=" * 50)
     
     # Connect to Salesforce
@@ -156,7 +156,7 @@ def main():
         SELECT Id, Name, AccountId, Account.Name, StageName, Amount, CloseDate, 
                Type, LeadSource, Description
         FROM Opportunity 
-        WHERE IsClosed = true AND Name LIKE '%{search_term}%'
+        WHERE StageName = 'Closed Won' AND Name LIKE '%{search_term}%'
         LIMIT 5
         """
         
@@ -171,7 +171,7 @@ def main():
                     print(f"     Close Date: {opp['CloseDate']}")
                     print(f"     Stage: {opp['StageName']}")
             else:
-                print(f"No closed opportunities found matching '{search_term}'")
+                print(f"No closed won opportunities found matching '{search_term}'")
         except Exception as e:
             print(f"❌ Error searching: {e}")
 
