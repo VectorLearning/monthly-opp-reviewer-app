@@ -1,6 +1,6 @@
-# Salesforce Closed Opportunities Retrieval Script
+# Salesforce Closed Opportunities Retrieval Script with AI Contract Analysis
 
-This script connects to your Salesforce instance and retrieves details about closed opportunities.
+This script connects to your Salesforce instance and retrieves details about closed opportunities with file attachments. It now includes the ability to extract contract information (Effective Date and Total Amount) from PDF attachments using AWS Bedrock AI.
 
 ## Setup
 
@@ -26,6 +26,22 @@ This script connects to your Salesforce instance and retrieves details about clo
    - Set `SALESFORCE_USERNAME`, `SALESFORCE_PASSWORD`, and `SALESFORCE_SECURITY_TOKEN`
    - Get your security token from Salesforce: Setup → Personal Setup → My Personal Information → Reset My Security Token
 
+3. **Configure AWS Bedrock credentials (for AI contract analysis):**
+   
+   Add these to your `.env` file:
+   ```
+   aws_access_key_id=your_aws_access_key_here
+   aws_secret_access_key=your_aws_secret_key_here
+   aws_session_token=your_session_token_here  # Optional, only if using temporary credentials
+   AWS_REGION=us-east-1
+   BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20240229-v1:0
+   ```
+   
+   Note: 
+   - AWS credentials are required only if you want to use the AI contract analysis feature
+   - The session token is only needed if you're using temporary AWS credentials
+   - The credentials can be in lowercase (as shown) or uppercase format
+
 ## Usage
 
 Run the script:
@@ -35,28 +51,43 @@ python get_closed_opportunities.py
 
 The script will:
 1. Connect to your Salesforce instance
-2. Query for the 20 most recently closed opportunities
+2. Query for closed won opportunities that have file attachments
 3. Display detailed information including:
    - Opportunity name and ID
    - Account name
-   - Stage (Closed Won, Closed Lost, etc.)
+   - Stage (Closed Won)
    - Amount
    - Close date
    - Type and lead source
    - Owner information
    - Description (truncated if long)
-4. Show summary statistics (total count, total amount, won/lost breakdown)
-5. Optionally let you search for specific opportunities by name
+   - Attached files with metadata
+4. Show summary statistics (total count, total amount, file count breakdown)
+5. Allow you to select an opportunity and extract text from its PDF attachments
+6. **NEW**: Optionally use AWS Bedrock AI to extract:
+   - Effective Date of the contract
+   - Total Amount from the contract
+   - Confidence scores for each extraction
 
 ## What the Script Shows
 
-For each closed opportunity, you'll see:
+For each closed opportunity with files, you'll see:
 - Basic information (name, account, stage)
 - Financial details (amount)
 - Timeline (close date, created date, last modified)
 - Source information (type, lead source)
 - Owner details (name and email)
 - Description (if available)
+- Attached files with:
+  - File name and type
+  - File size
+  - Creation date
+
+When extracting PDF content with AI, you'll see:
+- Effective Date (if found in the contract)
+- Total Amount (if found in the contract)
+- Confidence scores for each extraction
+- Notes about where the information was found
 
 ## Customization
 

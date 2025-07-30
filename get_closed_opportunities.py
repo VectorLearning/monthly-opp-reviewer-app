@@ -14,6 +14,7 @@ from config import settings
 import requests
 import io
 from PyPDF2 import PdfReader
+from bedrock_extractor import BedrockExtractor
 
 # Load environment variables
 load_dotenv('.env')
@@ -226,6 +227,22 @@ def select_opportunity_and_extract_pdf(sf, opportunities):
         print(extracted_text)
         print("\n" + "=" * 80)
         print(f"📊 Text extraction complete. Total characters: {len(extracted_text)}")
+        
+        # Ask if user wants to extract contract information using AWS Bedrock
+        print("\n🤖 Would you like to extract contract information (Effective Date & Total Amount) using AI?")
+        print("Enter 'y' for yes, any other key to skip: ", end="")
+        extract_choice = input().strip().lower()
+        
+        if extract_choice == 'y':
+            try:
+                print("\n⏳ Analyzing contract with AWS Bedrock...")
+                extractor = BedrockExtractor()
+                results = extractor.extract_contract_info(extracted_text)
+                formatted_results = extractor.format_results(results)
+                print(formatted_results)
+            except Exception as e:
+                print(f"\n❌ Error using Bedrock: {e}")
+                print("Please ensure AWS credentials are configured in your .env file.")
         
     except KeyboardInterrupt:
         print("\n\n👋 Operation cancelled by user.")

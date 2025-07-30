@@ -21,6 +21,13 @@ class Settings(BaseSettings):
     salesforce_domain: str = "test"  # "login" for production, "test" for sandbox
     salesforce_custom_domain: Optional[str] = None  # e.g. "vector-solutions--dev1.sandbox.lightning.force.com"
     
+    # AWS Bedrock Configuration
+    aws_access_key_id: Optional[str] = None
+    aws_secret_access_key: Optional[str] = None
+    aws_session_token: Optional[str] = None
+    aws_region: str = "us-east-1"
+    bedrock_model_id: str = "anthropic.claude-3-sonnet-20240229-v1:0"
+    
     class Config:
         env_file = ".env"
 
