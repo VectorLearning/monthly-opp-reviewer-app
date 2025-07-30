@@ -84,51 +84,27 @@ def get_closed_opportunities(sf, limit=10):
             LIMIT 5)
     FROM Opportunity 
     WHERE StageName = 'Closed Won'
-    ORDER BY CloseDate DESC 
-    LIMIT 500
+    ORDER BY CloseDate DESC
     """
     
     try:
         result = sf.query(query)
         all_opportunities = result['records']
         
-        print(f"📋 Debug: Found {len(all_opportunities)} total closed won opportunities")
-        
         # Filter to only include opportunities that have files attached
         opportunities = []
-        opportunities_without_files = []
-        
         for opp in all_opportunities:
             content_links = opp.get('ContentDocumentLinks')
             has_files = content_links and content_links.get('records')
             
-            # Also check for legacy attachments
-            has_attachments = False
-            try:
-                att_query = f"SELECT Id FROM Attachment WHERE ParentId = '{opp['Id']}' LIMIT 1"
-                att_result = sf.query(att_query)
-                has_attachments = len(att_result['records']) > 0
-            except:
-                pass
-            
-            if has_files or has_attachments:
+            if has_files:
                 opportunities.append(opp)
-                attachment_type = "Files" if has_files else "Attachments"
-                print(f"✅ HAS {attachment_type}: {opp['Name']}")
-            else:
-                opportunities_without_files.append(opp)
-                print(f"❌ NO FILES: {opp['Name']}")
-        
-        print(f"\n📊 Summary: {len(opportunities)} with files, {len(opportunities_without_files)} without files")
         
         # Limit the results to the requested number
         opportunities = opportunities[:limit]
         
         if not opportunities:
             print("No closed won opportunities with files found.")
-            print("Showing first 5 opportunities without files for reference:")
-            for i, opp in enumerate(opportunities_without_files[:5], 1):
-                print(f"  {i}. {opp['Name']} - {opp['CloseDate']}")
             return
         
         print(f"\n✅ Found {len(opportunities)} closed won opportunities:\n")
@@ -154,15 +130,6 @@ def get_closed_opportunities(sf, limit=10):
             content_links = opp.get('ContentDocumentLinks')
             files = content_links.get('records', []) if content_links else []
             
-            # Also check for legacy attachments
-            attachments = []
-            try:
-                att_query = f"SELECT Id, Name, ContentType FROM Attachment WHERE ParentId = '{opp['Id']}'"
-                att_result = sf.query(att_query)
-                attachments = att_result['records']
-            except:
-                pass
-            
             if files:
                 print(f"   📎 Attached Files ({len(files)}):")
                 for file in files:
@@ -172,14 +139,8 @@ def get_closed_opportunities(sf, limit=10):
                     print(f"        Type: {file['ContentDocument']['FileType']}")
                     print(f"        Size: {file_size_mb:.2f} MB")
                     print(f"        Created: {file['ContentDocument']['CreatedDate']}")
-            
-            if attachments:
-                print(f"   📎 Legacy Attachments ({len(attachments)}):")
-                for att in attachments:
-                    print(f"      • {att['Name']} ({att['ContentType']})")
-            
-            if not files and not attachments:
-                print(f"   📎 No files or attachments")
+            else:
+                print(f"   📎 No files attached")
             
             print("-" * 100)
         
