@@ -2,3 +2,4 @@ simple-salesforce==1.12.4
 python-dotenv==1.0.0
 pydantic-settings==2.0.3
 requests==2.31.0
+PyPDF2==3.0.1
