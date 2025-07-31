@@ -47,25 +47,24 @@ class BedrockExtractor:
             
         self.bedrock_client = boto3.client(**client_params)
         
-    def extract_contract_info(self, pdf_text):
+    def extract_contract_info(self, pdf_content):
         """
-        Extract effective date and total amount from contract PDF text
+        Extract effective date and total amount from contract PDF using AWS Bedrock Converse API
         
         Args:
-            pdf_text (str): The extracted text from the PDF
+            pdf_content (bytes): The raw PDF content
             
         Returns:
             dict: Contains 'effective_date' and 'total_amount' if found
         """
         
+        logger.info("Sending PDF to AWS Bedrock for analysis...")
+        
         # Craft the prompt for Claude
-        prompt = f"""You are analyzing a contract document. Please extract the following information:
+        prompt = """You are analyzing a contract document. Please extract the following information:
 
 1. Effective Date: The date when the contract becomes effective or starts. This might be labeled as "Effective Date", "Start Date", "Commencement Date", or similar.
 2. Total Amount: The total dollar amount of the contract. This might be labeled as "Total Contract Value", "Total Amount", "Contract Price", "Total Fee", or similar.
-
-Contract Text:
-{pdf_text}
 
 Please respond with a JSON object containing:
 - "effective_date": The effective date in ISO format (YYYY-MM-DD) if found, or null if not found
@@ -74,55 +73,45 @@ Please respond with a JSON object containing:
 - "notes": Any relevant notes about the extraction
 
 Example response:
-{{
+{
     "effective_date": "2024-01-15",
     "effective_date_confidence": 0.95,
     "total_amount": 150000.00,
     "total_amount_confidence": 0.90,
     "notes": "Effective date found in Section 1. Total amount calculated from monthly fees in Schedule A."
-}}"""
+}"""
 
         try:
-            # Prepare the request body for Claude
-            if 'claude-3' in self.model_id:
-                # Claude 3 format
-                request_body = {
-                    "anthropic_version": "bedrock-2023-05-31",
-                    "max_tokens": 1000,
-                    "messages": [
+            # Construct conversation with PDF document for Converse API
+            conversation = [
+                {
+                    "role": "user",
+                    "content": [
+                        {"text": prompt},
                         {
-                            "role": "user",
-                            "content": prompt
+                            "document": {
+                                "format": "pdf",
+                                "name": "contract",
+                                "source": {"bytes": pdf_content}
+                            }
                         }
-                    ],
-                    "temperature": 0.0,
-                    "top_p": 0.9
+                    ]
                 }
-            else:
-                # Claude 2 format (legacy)
-                request_body = {
-                    "prompt": f"\n\nHuman: {prompt}\n\nAssistant:",
-                    "max_tokens_to_sample": 1000,
-                    "temperature": 0.0,
-                    "top_p": 0.9
-                }
+            ]
             
-            # Invoke the model
-            response = self.bedrock_client.invoke_model(
+            # Use the Converse API which supports PDF documents
+            response = self.bedrock_client.converse(
                 modelId=self.model_id,
-                body=json.dumps(request_body),
-                contentType='application/json',
-                accept='application/json'
+                messages=conversation,
+                inferenceConfig={
+                    "maxTokens": 1000,
+                    "temperature": 0.0,
+                    "topP": 0.9
+                }
             )
             
-            # Parse the response
-            response_body = json.loads(response['body'].read())
-            
-            # Extract the text content based on model type
-            if 'claude-3' in self.model_id:
-                response_text = response_body['content'][0]['text']
-            else:
-                response_text = response_body['completion']
+            # Extract the text response from Converse API
+            response_text = response["output"]["message"]["content"][0]["text"]
             
             # Try to parse the JSON response
             try:

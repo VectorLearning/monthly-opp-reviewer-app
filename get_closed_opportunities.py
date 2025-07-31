@@ -235,9 +235,9 @@ def select_opportunity_and_extract_pdf(sf, opportunities):
         
         if extract_choice == 'y':
             try:
-                print("\n⏳ Analyzing contract with AWS Bedrock...")
+                print("\n⏳ Analyzing contract with AWS Bedrock (sending raw PDF)...")
                 extractor = BedrockExtractor()
-                results = extractor.extract_contract_info(extracted_text)
+                results = extractor.extract_contract_info(pdf_content)  # Pass raw PDF content instead of text
                 formatted_results = extractor.format_results(results)
                 print(formatted_results)
             except Exception as e:

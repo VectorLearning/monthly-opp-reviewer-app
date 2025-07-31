@@ -41,6 +41,8 @@ This script connects to your Salesforce instance and retrieves details about clo
    - AWS credentials are required only if you want to use the AI contract analysis feature
    - The session token is only needed if you're using temporary AWS credentials
    - The credentials can be in lowercase (as shown) or uppercase format
+   - The AI sends the raw PDF file to Bedrock using the "image" type with "application/pdf" media type
+   - Claude 3 models are required (Claude 2 doesn't support multimodal inputs)
 
 ## Usage
 
@@ -64,10 +66,11 @@ The script will:
    - Attached files with metadata
 4. Show summary statistics (total count, total amount, file count breakdown)
 5. Allow you to select an opportunity and extract text from its PDF attachments
-6. **NEW**: Optionally use AWS Bedrock AI to extract:
+6. **NEW**: Optionally use AWS Bedrock AI to analyze the PDF and extract:
    - Effective Date of the contract
    - Total Amount from the contract
    - Confidence scores for each extraction
+   - Note: The AI converts PDF pages to images for analysis, preserving formatting and layout
 
 ## What the Script Shows
 
